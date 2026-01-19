@@ -76,6 +76,8 @@ define('DB_NAME', 'school_management');
 
 ## 📡 API Endpoints
 
+> 📖 **For comprehensive API documentation with detailed request/response examples, field descriptions, and error codes, see [API_DOCUMENTATION.md](API_DOCUMENTATION.md)**
+
 ### Base URL
 ```
 http://localhost/student_backend/
