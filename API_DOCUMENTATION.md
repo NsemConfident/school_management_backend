@@ -44,6 +44,58 @@ For production, replace `localhost/student_backend` with your actual domain.
 
 ---
 
+## Request Formats
+
+The API supports **both JSON and form-data** request formats. You can use either format in Postman or any HTTP client.
+
+### JSON Format (Default)
+
+**Content-Type:** `application/json`
+
+**Postman Setup:**
+1. Select **Body** tab
+2. Choose **raw**
+3. Select **JSON** from dropdown
+4. Enter your JSON data
+
+**Example:**
+```json
+{
+  "username": "johndoe",
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
+```
+
+### Form-Data Format
+
+**Content-Type:** `multipart/form-data` (automatically set by Postman)
+
+**Postman Setup:**
+1. Select **Body** tab
+2. Choose **form-data**
+3. Add key-value pairs for each field
+
+**Example:**
+| Key | Value |
+|-----|-------|
+| username | johndoe |
+| email | john.doe@example.com |
+| password | password123 |
+
+### URL-Encoded Format
+
+**Content-Type:** `application/x-www-form-urlencoded`
+
+**Postman Setup:**
+1. Select **Body** tab
+2. Choose **x-www-form-urlencoded**
+3. Add key-value pairs
+
+**Note:** The API automatically detects the content type and parses the data accordingly. All three formats work seamlessly.
+
+---
+
 ## Authentication
 
 The API uses **token-based authentication**. After successful registration or login, you'll receive an authentication token that must be included in subsequent requests.
@@ -1438,6 +1490,153 @@ curl -X POST http://localhost/student_backend/grades \
     "notes": "Good performance"
   }'
 ```
+
+---
+
+## Postman Form-Data Examples
+
+The API supports form-data format, which is convenient for testing in Postman. Here are examples using form-data:
+
+### Example: Register User (Form-Data)
+
+**Postman Setup:**
+1. Method: `POST`
+2. URL: `http://localhost/student_backend/auth/register`
+3. Body tab → Select **form-data**
+4. Add the following key-value pairs:
+
+| Key | Value | Type |
+|-----|-------|------|
+| username | johndoe | Text |
+| email | john.doe@example.com | Text |
+| password | password123 | Text |
+| role | student | Text |
+| role_id | 1 | Text |
+
+**Note:** All values should be set as **Text** type (not File).
+
+---
+
+### Example: Login (Form-Data)
+
+**Postman Setup:**
+1. Method: `POST`
+2. URL: `http://localhost/student_backend/auth/login`
+3. Body tab → Select **form-data**
+4. Add the following key-value pairs:
+
+| Key | Value |
+|-----|-------|
+| email | john.doe@example.com |
+| password | password123 |
+
+---
+
+### Example: Create Student (Form-Data)
+
+**Postman Setup:**
+1. Method: `POST`
+2. URL: `http://localhost/student_backend/students`
+3. Headers:
+   - `Authorization: Bearer YOUR_TOKEN_HERE`
+4. Body tab → Select **form-data**
+5. Add the following key-value pairs:
+
+| Key | Value |
+|-----|-------|
+| first_name | John |
+| last_name | Doe |
+| email | john.doe@example.com |
+| phone | 123-456-7890 |
+| date_of_birth | 2010-05-15 |
+| address | 123 Main St |
+| class_id | 1 |
+| status | active |
+
+---
+
+### Example: Update Student (Form-Data)
+
+**Postman Setup:**
+1. Method: `PUT` or `PATCH`
+2. URL: `http://localhost/student_backend/students/1`
+3. Headers:
+   - `Authorization: Bearer YOUR_TOKEN_HERE`
+4. Body tab → Select **form-data**
+5. Add only the fields you want to update:
+
+| Key | Value |
+|-----|-------|
+| first_name | John |
+| last_name | Smith |
+| phone | 987-654-3210 |
+
+---
+
+### Example: Create Attendance (Form-Data)
+
+**Postman Setup:**
+1. Method: `POST`
+2. URL: `http://localhost/student_backend/attendance`
+3. Headers:
+   - `Authorization: Bearer YOUR_TOKEN_HERE`
+4. Body tab → Select **form-data**
+5. Add the following key-value pairs:
+
+| Key | Value |
+|-----|-------|
+| student_id | 1 |
+| date | 2024-01-15 |
+| status | present |
+| notes | On time |
+
+---
+
+### Example: Create Grade (Form-Data)
+
+**Postman Setup:**
+1. Method: `POST`
+2. URL: `http://localhost/student_backend/grades`
+3. Headers:
+   - `Authorization: Bearer YOUR_TOKEN_HERE`
+4. Body tab → Select **form-data**
+5. Add the following key-value pairs:
+
+| Key | Value |
+|-----|-------|
+| student_id | 1 |
+| subject_id | 1 |
+| grade | 85.50 |
+| exam_type | midterm |
+| exam_date | 2024-01-15 |
+| notes | Good performance |
+
+---
+
+### Example: Change Password (Form-Data)
+
+**Postman Setup:**
+1. Method: `POST`
+2. URL: `http://localhost/student_backend/auth/change-password`
+3. Headers:
+   - `Authorization: Bearer YOUR_TOKEN_HERE`
+4. Body tab → Select **form-data**
+5. Add the following key-value pairs:
+
+| Key | Value |
+|-----|-------|
+| current_password | oldpassword123 |
+| new_password | newpassword123 |
+
+---
+
+**Tips for Using Form-Data in Postman:**
+
+1. **Select form-data**: In the Body tab, make sure you select **form-data** (not raw or x-www-form-urlencoded)
+2. **Text vs File**: For regular form fields, keep the type as **Text**. Only use **File** if you're uploading actual files
+3. **Numbers**: Enter numbers as text (e.g., "1" for class_id, "85.50" for grade)
+4. **Dates**: Use YYYY-MM-DD format (e.g., "2024-01-15")
+5. **Authentication**: Don't forget to add the Authorization header with your token
 
 ---
 
