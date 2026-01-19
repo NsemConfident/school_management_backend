@@ -239,7 +239,13 @@ Register a new user account.
 | email | string | Yes | Unique email address |
 | password | string | Yes | Password (min 6 characters) |
 | role | string | Yes | User role: `admin`, `student`, or `teacher` |
-| role_id | integer | No | ID from students or teachers table based on role |
+| role_id | integer | No | ID from students or teachers table based on role. If provided, the record must exist. If omitted, user can be linked to a student/teacher record later. Admin role doesn't use role_id. |
+
+**Notes:**
+- `role_id` is **optional** for all roles
+- If you provide `role_id`, the student/teacher record must exist in the database first
+- If you omit `role_id`, you can register successfully and link the account later
+- For `admin` role, `role_id` is ignored even if provided
 
 **Response:** `201 Created`
 
@@ -272,7 +278,7 @@ Register a new user account.
 
 - `400` - Missing required fields or invalid role
 - `409` - Username or email already exists
-- `400` - Invalid role_id (record not found)
+- `400` - Invalid role_id (record not found). If you provide a role_id, the corresponding student or teacher record must exist in the database. You can either create the student/teacher record first, or omit role_id to register without linking.
 
 ---
 
@@ -1511,9 +1517,13 @@ The API supports form-data format, which is convenient for testing in Postman. H
 | email | john.doe@example.com | Text |
 | password | password123 | Text |
 | role | student | Text |
-| role_id | 1 | Text |
+| role_id | 1 | Text (Optional) |
 
-**Note:** All values should be set as **Text** type (not File).
+**Notes:**
+- All values should be set as **Text** type (not File)
+- `role_id` is **optional** - you can omit it to register without linking to a student/teacher record
+- If you include `role_id`, make sure the student or teacher record exists in the database first
+- For `admin` role, `role_id` is not needed
 
 ---
 

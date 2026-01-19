@@ -49,24 +49,32 @@ class AuthController {
         }
         
         // Validate role_id if provided (must exist in respective table)
-        $roleId = isset($input['role_id']) ? (int)$input['role_id'] : null;
-        if ($roleId) {
-            if ($input['role'] === 'student') {
-                $checkSql = "SELECT id FROM students WHERE id = ?";
-            } elseif ($input['role'] === 'teacher') {
-                $checkSql = "SELECT id FROM teachers WHERE id = ?";
-            } else {
-                $roleId = null; // Admin doesn't need role_id
-            }
+        $roleId = null;
+        if (isset($input['role_id']) && !empty($input['role_id'])) {
+            $roleId = (int)$input['role_id'];
             
-            if (isset($checkSql)) {
-                $checkStmt = $this->conn->prepare($checkSql);
-                $checkStmt->bind_param('i', $roleId);
-                $checkStmt->execute();
-                $result = $checkStmt->get_result();
-                if ($result->num_rows === 0) {
-                    sendError("Invalid {$input['role']}_id. Record not found.", 400);
+            // Only validate if role_id is provided and role is not admin
+            if ($input['role'] !== 'admin' && $roleId > 0) {
+                if ($input['role'] === 'student') {
+                    $checkSql = "SELECT id FROM students WHERE id = ?";
+                    $entityName = 'student';
+                } elseif ($input['role'] === 'teacher') {
+                    $checkSql = "SELECT id FROM teachers WHERE id = ?";
+                    $entityName = 'teacher';
                 }
+                
+                if (isset($checkSql)) {
+                    $checkStmt = $this->conn->prepare($checkSql);
+                    $checkStmt->bind_param('i', $roleId);
+                    $checkStmt->execute();
+                    $result = $checkStmt->get_result();
+                    if ($result->num_rows === 0) {
+                        sendError("Invalid role_id. {$entityName} with ID {$roleId} not found. Please create the {$entityName} record first or omit role_id to register without linking.", 400);
+                    }
+                }
+            } else {
+                // Admin doesn't need role_id, set to null
+                $roleId = null;
             }
         }
         
