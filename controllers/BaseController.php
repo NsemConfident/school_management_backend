@@ -29,13 +29,20 @@ class BaseController {
         validateRequired($input, $this->getRequiredFields());
         
         $sanitized = sanitizeInput($input);
+        
         $id = $this->model->create($sanitized);
         
         if ($id) {
             $data = $this->model->getById($id);
             sendSuccess($data, 'Record created successfully', 201);
         } else {
-            sendError('Failed to create record', 500);
+            // Get the actual database error if available
+            $errorMsg = 'Failed to create record';
+            $dbError = $this->model->getLastError();
+            if ($dbError) {
+                $errorMsg .= ': ' . $dbError;
+            }
+            sendError($errorMsg, 500);
         }
     }
     

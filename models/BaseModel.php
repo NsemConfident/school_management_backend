@@ -7,10 +7,12 @@
 class BaseModel {
     protected $table;
     protected $conn;
+    protected $lastError;
     
     public function __construct($table) {
         $this->table = $table;
         $this->conn = getDBConnection();
+        $this->lastError = null;
     }
     
     /**
@@ -65,6 +67,15 @@ class BaseModel {
      * Create new record
      */
     public function create($data) {
+        // Remove null or empty string values to use database defaults
+        $data = array_filter($data, function($value) {
+            return $value !== null && $value !== '';
+        });
+        
+        if (empty($data)) {
+            return false;
+        }
+        
         $fields = array_keys($data);
         $placeholders = array_fill(0, count($fields), '?');
         
@@ -72,21 +83,49 @@ class BaseModel {
                 VALUES (" . implode(', ', $placeholders) . ")";
         
         $stmt = $this->conn->prepare($sql);
-        $types = str_repeat('s', count($data));
-        $values = array_values($data);
+        
+        if (!$stmt) {
+            error_log("SQL Prepare Error: " . $this->conn->error);
+            return false;
+        }
+        
+        // Determine types for bind_param
+        $types = '';
+        $values = [];
+        foreach ($data as $key => $value) {
+            if (is_int($value) || (is_string($value) && is_numeric($value) && strpos($value, '.') === false)) {
+                $types .= 'i'; // integer
+                $values[] = (int)$value;
+            } elseif (is_float($value) || (is_string($value) && is_numeric($value) && strpos($value, '.') !== false)) {
+                $types .= 'd'; // double/float
+                $values[] = (float)$value;
+            } else {
+                $types .= 's'; // string
+                $values[] = $value;
+            }
+        }
+        
         $stmt->bind_param($types, ...$values);
         
         if ($stmt->execute()) {
             return $this->conn->insert_id;
+        } else {
+            $this->lastError = $stmt->error ?: $this->conn->error;
+            error_log("SQL Execute Error: " . $this->lastError);
+            error_log("SQL: " . $sql);
+            error_log("Data: " . print_r($data, true));
+            return false;
         }
-        
-        return false;
     }
     
     /**
      * Update record
      */
     public function update($id, $data) {
+        if (empty($data)) {
+            return false;
+        }
+        
         $fields = [];
         foreach (array_keys($data) as $field) {
             $fields[] = "$field = ?";
@@ -95,12 +134,41 @@ class BaseModel {
         $sql = "UPDATE {$this->table} SET " . implode(', ', $fields) . " WHERE id = ?";
         
         $stmt = $this->conn->prepare($sql);
-        $types = str_repeat('s', count($data)) . 'i';
-        $values = array_values($data);
+        
+        if (!$stmt) {
+            $this->lastError = $this->conn->error;
+            error_log("SQL Prepare Error: " . $this->lastError);
+            return false;
+        }
+        
+        // Determine types for bind_param
+        $types = '';
+        $values = [];
+        foreach ($data as $key => $value) {
+            if (is_int($value) || (is_string($value) && is_numeric($value) && strpos($value, '.') === false)) {
+                $types .= 'i'; // integer
+                $values[] = (int)$value;
+            } elseif (is_float($value) || (is_string($value) && is_numeric($value) && strpos($value, '.') !== false)) {
+                $types .= 'd'; // double/float
+                $values[] = (float)$value;
+            } else {
+                $types .= 's'; // string
+                $values[] = $value;
+            }
+        }
+        $types .= 'i'; // for id
         $values[] = $id;
+        
         $stmt->bind_param($types, ...$values);
         
-        return $stmt->execute();
+        if ($stmt->execute()) {
+            return true;
+        } else {
+            $this->lastError = $stmt->error ?: $this->conn->error;
+            error_log("SQL Execute Error: " . $this->lastError);
+            error_log("SQL: " . $sql);
+            return false;
+        }
     }
     
     /**
@@ -112,6 +180,20 @@ class BaseModel {
         $stmt->bind_param('i', $id);
         
         return $stmt->execute();
+    }
+    
+    /**
+     * Get last database error
+     */
+    public function getLastError() {
+        return $this->lastError ?: ($this->conn->error ?: null);
+    }
+    
+    /**
+     * Get connection (for error reporting)
+     */
+    public function getConnection() {
+        return $this->conn;
     }
 }
 ?>

@@ -571,12 +571,13 @@ Create a new student record.
 | last_name | string | Yes | Student's last name |
 | email | string | Yes | Student's email (must be unique) |
 | date_of_birth | date | Yes | Student's date of birth (YYYY-MM-DD) |
-| class_id | integer | Yes | ID of the class the student belongs to |
+| class_id | integer | No | ID of the class the student belongs to. If provided, the class must exist in the database. If omitted, student will be created without a class assignment. |
 
 **Optional Fields:**
 
 | Field | Type | Description |
 |-------|------|-------------|
+| class_id | integer | ID of the class the student belongs to. If provided, the class must exist. If omitted, student is created without a class assignment. |
 | phone | string | Student's phone number |
 | address | string | Student's address |
 | enrollment_date | date | Enrollment date (defaults to current date) |
@@ -608,7 +609,9 @@ Create a new student record.
 **Error Responses:**
 
 - `400` - Missing required fields
-- `500` - Failed to create record
+- `400` - Invalid class_id (class does not exist). Create the class first using `POST /classes` or omit class_id.
+- `409` - Email already exists (duplicate email)
+- `500` - Failed to create record (database error)
 
 ---
 
