@@ -9,21 +9,57 @@
 function getJsonInput() {
     // Check Content-Type header
     $contentType = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : '';
+    $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '';
     
-    // Handle form-data or x-www-form-urlencoded
-    if (strpos($contentType, 'multipart/form-data') !== false || 
-        strpos($contentType, 'application/x-www-form-urlencoded') !== false) {
-        // Return $_POST data (form-data and urlencoded are automatically parsed into $_POST)
+    // For POST requests, $_POST is automatically populated with form-data
+    if ($method === 'POST' && !empty($_POST)) {
         return $_POST;
     }
     
-    // Handle JSON
+    // Handle x-www-form-urlencoded (works for PUT/PATCH)
+    if (strpos($contentType, 'application/x-www-form-urlencoded') !== false) {
+        // For PUT/PATCH, parse from php://input
+        if (in_array($method, ['PUT', 'PATCH', 'DELETE'])) {
+            $input = file_get_contents('php://input');
+            if (!empty($input)) {
+                parse_str($input, $parsed);
+                return $parsed ?: [];
+            }
+        }
+        // For POST, use $_POST
+        return $_POST ?: [];
+    }
+    
+    // Handle multipart/form-data
+    if (strpos($contentType, 'multipart/form-data') !== false) {
+        // For POST, $_POST is automatically populated
+        if ($method === 'POST' && !empty($_POST)) {
+            return $_POST;
+        }
+        
+        // For PUT/PATCH with multipart/form-data, PHP doesn't populate $_POST automatically
+        // This is a limitation - recommend using JSON or x-www-form-urlencoded for PUT/PATCH
+        // But we'll try to use $_POST if available (some servers might populate it)
+        if (!empty($_POST)) {
+            return $_POST;
+        }
+        
+        // Note: Parsing multipart/form-data manually from php://input is complex
+        // For PUT/PATCH, it's better to use JSON or x-www-form-urlencoded
+        return [];
+    }
+    
+    // Handle JSON (works for all methods)
     if (strpos($contentType, 'application/json') !== false || empty($contentType)) {
         $json = file_get_contents('php://input');
         
-        // If JSON is empty, try $_POST as fallback
+        // If JSON is empty, try $_POST as fallback (for POST requests)
         if (empty($json) && !empty($_POST)) {
             return $_POST;
+        }
+        
+        if (empty($json)) {
+            return [];
         }
         
         $data = json_decode($json, true);
@@ -33,10 +69,14 @@ function getJsonInput() {
             if (!empty($_POST)) {
                 return $_POST;
             }
+            // Don't error on empty input - let controller handle it
+            if (empty($json)) {
+                return [];
+            }
             sendError('Invalid JSON format', 400);
         }
         
-        return $data;
+        return $data ?: [];
     }
     
     // Default: try $_POST first, then JSON
@@ -48,7 +88,7 @@ function getJsonInput() {
     if (!empty($json)) {
         $data = json_decode($json, true);
         if (json_last_error() === JSON_ERROR_NONE) {
-            return $data;
+            return $data ?: [];
         }
     }
     

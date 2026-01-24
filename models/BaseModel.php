@@ -126,6 +126,9 @@ class BaseModel {
             return false;
         }
         
+        // Ensure ID is an integer
+        $id = (int)$id;
+        
         $fields = [];
         foreach (array_keys($data) as $field) {
             $fields[] = "$field = ?";
@@ -138,6 +141,7 @@ class BaseModel {
         if (!$stmt) {
             $this->lastError = $this->conn->error;
             error_log("SQL Prepare Error: " . $this->lastError);
+            error_log("SQL: " . $sql);
             return false;
         }
         
@@ -145,7 +149,7 @@ class BaseModel {
         $types = '';
         $values = [];
         foreach ($data as $key => $value) {
-            if (is_int($value) || (is_string($value) && is_numeric($value) && strpos($value, '.') === false)) {
+            if (is_int($value) || (is_string($value) && is_numeric($value) && strpos($value, '.') === false && $value !== '')) {
                 $types .= 'i'; // integer
                 $values[] = (int)$value;
             } elseif (is_float($value) || (is_string($value) && is_numeric($value) && strpos($value, '.') !== false)) {
@@ -162,11 +166,22 @@ class BaseModel {
         $stmt->bind_param($types, ...$values);
         
         if ($stmt->execute()) {
-            return true;
+            // Check if any rows were actually affected
+            $affectedRows = $stmt->affected_rows;
+            if ($affectedRows > 0) {
+                return true;
+            } else {
+                // No rows affected - record might not exist or data is the same
+                $this->lastError = "No rows affected. Record may not exist or data unchanged.";
+                error_log("Update: No rows affected for ID {$id} in table {$this->table}");
+                return false;
+            }
         } else {
             $this->lastError = $stmt->error ?: $this->conn->error;
             error_log("SQL Execute Error: " . $this->lastError);
             error_log("SQL: " . $sql);
+            error_log("ID: " . $id);
+            error_log("Data: " . print_r($data, true));
             return false;
         }
     }

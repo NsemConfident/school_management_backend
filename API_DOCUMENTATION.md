@@ -83,6 +83,8 @@ The API supports **both JSON and form-data** request formats. You can use either
 | email | john.doe@example.com |
 | password | password123 |
 
+**⚠️ Important:** Form-data works best with **POST** requests. For **PUT** and **PATCH** requests, it's recommended to use **JSON** or **x-www-form-urlencoded** instead, as PHP doesn't automatically parse form-data for PUT/PATCH requests.
+
 ### URL-Encoded Format
 
 **Content-Type:** `application/x-www-form-urlencoded`
@@ -92,7 +94,11 @@ The API supports **both JSON and form-data** request formats. You can use either
 2. Choose **x-www-form-urlencoded**
 3. Add key-value pairs
 
-**Note:** The API automatically detects the content type and parses the data accordingly. All three formats work seamlessly.
+**Note:** Works well with all HTTP methods including PUT and PATCH.
+
+**Summary:**
+- **POST requests:** JSON, form-data, or x-www-form-urlencoded all work
+- **PUT/PATCH requests:** Use **JSON** (recommended) or **x-www-form-urlencoded** for best compatibility
 
 ---
 
@@ -1568,14 +1574,33 @@ The API supports form-data format, which is convenient for testing in Postman. H
 
 ---
 
-### Example: Update Student (Form-Data)
+### Example: Update Student (JSON - Recommended for PUT/PATCH)
 
 **Postman Setup:**
 1. Method: `PUT` or `PATCH`
 2. URL: `http://localhost/student_backend/students/1`
 3. Headers:
    - `Authorization: Bearer YOUR_TOKEN_HERE`
-4. Body tab → Select **form-data**
+   - `Content-Type: application/json`
+4. Body tab → Select **raw** → Choose **JSON**
+5. Add only the fields you want to update:
+
+```json
+{
+  "first_name": "John",
+  "last_name": "Smith",
+  "phone": "987-654-3210"
+}
+```
+
+**Alternative: Update Student (x-www-form-urlencoded)**
+
+**Postman Setup:**
+1. Method: `PUT` or `PATCH`
+2. URL: `http://localhost/student_backend/students/1`
+3. Headers:
+   - `Authorization: Bearer YOUR_TOKEN_HERE`
+4. Body tab → Select **x-www-form-urlencoded**
 5. Add only the fields you want to update:
 
 | Key | Value |
@@ -1583,6 +1608,8 @@ The API supports form-data format, which is convenient for testing in Postman. H
 | first_name | John |
 | last_name | Smith |
 | phone | 987-654-3210 |
+
+**Note:** For PUT/PATCH requests, use JSON or x-www-form-urlencoded. Form-data may not work properly with PUT/PATCH due to PHP limitations.
 
 ---
 

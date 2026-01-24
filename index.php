@@ -17,6 +17,13 @@ $route = isset($segments[0]) ? $segments[0] : '';
 $resource = isset($segments[1]) ? $segments[1] : '';
 $id = isset($segments[2]) ? $segments[2] : '';
 
+// For standard CRUD routes, if segments[1] is numeric, it's the ID, not a resource
+// e.g., /students/8 -> route=students, id=8
+if ($route !== 'auth' && $resource && is_numeric($resource)) {
+    $id = $resource;
+    $resource = '';
+}
+
 // Route to appropriate controller
 switch ($route) {
     case 'auth':
