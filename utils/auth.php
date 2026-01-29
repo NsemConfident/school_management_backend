@@ -140,5 +140,16 @@ function updateLastLogin($userId) {
     $stmt->bind_param('i', $userId);
     $stmt->execute();
 }
+
+/**
+ * Get current authenticated user
+ */
+function getCurrentUser() {
+    $token = getTokenFromRequest();
+    if ($token) {
+        return validateToken($token);
+    }
+    return null;
+}
 ?>
 

@@ -117,5 +117,12 @@ function getUriSegments() {
     
     return $uri;
 }
+
+/**
+ * Get query parameters
+ */
+function getQueryParams() {
+    return $_GET;
+}
 ?>
 

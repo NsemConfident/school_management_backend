@@ -68,9 +68,39 @@ switch ($route) {
         handleRequest($controller, $method, $resource, $id);
         break;
         
+    case 'timetables':
+        require_once __DIR__ . '/controllers/TimetableController.php';
+        $controller = new TimetableController();
+        handleTimetableRequest($controller, $method, $resource, $id);
+        break;
+        
+    case 'exam-timetables':
+        require_once __DIR__ . '/controllers/ExamTimetableController.php';
+        $controller = new ExamTimetableController();
+        handleExamTimetableRequest($controller, $method, $resource, $id);
+        break;
+        
+    case 'assessment-timetables':
+        require_once __DIR__ . '/controllers/AssessmentTimetableController.php';
+        $controller = new AssessmentTimetableController();
+        handleAssessmentTimetableRequest($controller, $method, $resource, $id);
+        break;
+        
+    case 'notifications':
+        require_once __DIR__ . '/controllers/NotificationController.php';
+        $controller = new NotificationController();
+        handleNotificationRequest($controller, $method, $resource, $id);
+        break;
+        
+    case 'class-subjects':
+        require_once __DIR__ . '/models/ClassSubjectModel.php';
+        $model = new ClassSubjectModel();
+        handleClassSubjectRequest($model, $method, $resource, $id);
+        break;
+        
     case '':
     case 'api':
-        sendSuccess(null, 'School Management System API is running', 200);
+        sendSuccess(null, 'Timetable Generation System (TGS) API is running', 200);
         break;
         
     default:
@@ -165,6 +195,299 @@ function handleRequest($controller, $method, $resource, $id) {
             
         default:
             sendError('Method not allowed', 405);
+            break;
+    }
+}
+
+/**
+ * Handle timetable request routing
+ */
+function handleTimetableRequest($controller, $method, $resource, $id) {
+    switch ($resource) {
+        case 'generate':
+            if ($method === 'POST') {
+                $controller->generate();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        case 'active':
+            if ($method === 'GET') {
+                $controller->getActive();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        case 'student':
+            if ($method === 'GET') {
+                $controller->getStudentTimetable();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        case 'check-conflicts':
+            if ($method === 'POST') {
+                $controller->checkConflicts();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        case 'slots':
+            $slotId = $id;
+            if ($method === 'POST') {
+                $controller->addSlot();
+            } elseif ($method === 'PUT' || $method === 'PATCH') {
+                if ($slotId) {
+                    $controller->updateSlot($slotId);
+                } else {
+                    sendError('Slot ID required', 400);
+                }
+            } elseif ($method === 'DELETE') {
+                if ($slotId) {
+                    $controller->deleteSlot($slotId);
+                } else {
+                    sendError('Slot ID required', 400);
+                }
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        case 'activate':
+            if ($method === 'POST' && $id) {
+                $controller->activate($id);
+            } else {
+                sendError('Method not allowed or ID required', 405);
+            }
+            break;
+            
+        default:
+            // Standard CRUD operations
+            handleRequest($controller, $method, $resource, $id);
+            break;
+    }
+}
+
+/**
+ * Handle exam timetable request routing
+ */
+function handleExamTimetableRequest($controller, $method, $resource, $id) {
+    switch ($resource) {
+        case 'student':
+            if ($method === 'GET') {
+                $controller->getStudentExams();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        case 'publish':
+            if ($method === 'POST' && $id) {
+                $controller->publish($id);
+            } else {
+                sendError('Method not allowed or ID required', 405);
+            }
+            break;
+            
+        case 'check-conflicts':
+            if ($method === 'POST') {
+                $controller->checkConflicts();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        case 'slots':
+            if ($method === 'POST') {
+                $controller->addSlot();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        default:
+            // Standard CRUD operations
+            handleRequest($controller, $method, $resource, $id);
+            break;
+    }
+}
+
+/**
+ * Handle assessment timetable request routing
+ */
+function handleAssessmentTimetableRequest($controller, $method, $resource, $id) {
+    switch ($resource) {
+        case 'student':
+            if ($method === 'GET') {
+                $controller->getStudentAssessments();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        case 'publish':
+            if ($method === 'POST' && $id) {
+                $controller->publish($id);
+            } else {
+                sendError('Method not allowed or ID required', 405);
+            }
+            break;
+            
+        case 'slots':
+            if ($method === 'POST') {
+                $controller->addSlot();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        default:
+            // Standard CRUD operations
+            handleRequest($controller, $method, $resource, $id);
+            break;
+    }
+}
+
+/**
+ * Handle notification request routing
+ */
+function handleNotificationRequest($controller, $method, $resource, $id) {
+    switch ($resource) {
+        case 'my':
+            if ($method === 'GET') {
+                $controller->getMyNotifications();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        case 'unread-count':
+            if ($method === 'GET') {
+                $controller->getUnreadCount();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        case 'mark-all-read':
+            if ($method === 'POST') {
+                $controller->markAllAsRead();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        case 'mark-read':
+            if ($method === 'POST' && $id) {
+                $controller->markAsRead($id);
+            } else {
+                sendError('Method not allowed or ID required', 405);
+            }
+            break;
+            
+        case 'by-role':
+            if ($method === 'GET') {
+                $controller->getByRole();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+            
+        default:
+            // Standard CRUD operations
+            if ($method === 'GET' && $id) {
+                // Get notification by ID - not implemented in controller, use standard
+                sendError('Endpoint not found', 404);
+            } elseif ($method === 'POST') {
+                $controller->create();
+            } else {
+                sendError('Method not allowed', 405);
+            }
+            break;
+    }
+}
+
+/**
+ * Handle class-subject request routing
+ */
+function handleClassSubjectRequest($model, $method, $resource, $id) {
+    require_once __DIR__ . '/utils/response.php';
+    
+    switch ($resource) {
+        case 'class':
+            if ($method === 'GET' && $id) {
+                $subjects = $model->getSubjectsByClass($id);
+                sendSuccess($subjects, 'Subjects retrieved successfully');
+            } else {
+                sendError('Class ID required', 400);
+            }
+            break;
+            
+        case 'subject':
+            if ($method === 'GET' && $id) {
+                $classes = $model->getClassesBySubject($id);
+                sendSuccess($classes, 'Classes retrieved successfully');
+            } else {
+                sendError('Subject ID required', 400);
+            }
+            break;
+            
+        default:
+            // Standard CRUD operations
+            if ($method === 'GET') {
+                if ($id) {
+                    $data = $model->getById($id);
+                    if ($data) {
+                        sendSuccess($data, 'Record retrieved successfully');
+                    } else {
+                        sendError('Record not found', 404);
+                    }
+                } else {
+                    $data = $model->getAll();
+                    sendSuccess($data, 'Records retrieved successfully');
+                }
+            } elseif ($method === 'POST') {
+                require_once __DIR__ . '/utils/request.php';
+                $input = getJsonInput();
+                $id = $model->create($input);
+                if ($id) {
+                    $data = $model->getById($id);
+                    sendSuccess($data, 'Record created successfully', 201);
+                } else {
+                    sendError('Failed to create record', 500);
+                }
+            } elseif ($method === 'PUT' || $method === 'PATCH') {
+                if ($id) {
+                    require_once __DIR__ . '/utils/request.php';
+                    $input = getJsonInput();
+                    $result = $model->update($id, $input);
+                    if ($result) {
+                        $data = $model->getById($id);
+                        sendSuccess($data, 'Record updated successfully');
+                    } else {
+                        sendError('Failed to update record', 500);
+                    }
+                } else {
+                    sendError('ID required', 400);
+                }
+            } elseif ($method === 'DELETE') {
+                if ($id) {
+                    $result = $model->delete($id);
+                    if ($result) {
+                        sendSuccess(null, 'Record deleted successfully');
+                    } else {
+                        sendError('Failed to delete record', 500);
+                    }
+                } else {
+                    sendError('ID required', 400);
+                }
+            } else {
+                sendError('Method not allowed', 405);
+            }
             break;
     }
 }
